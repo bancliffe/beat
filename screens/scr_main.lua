@@ -55,7 +55,7 @@ function scr_main_update()
 end
 
 function scr_main_draw()
-    cls(5)
+    cls()
     draw_bg()
     palt(0, false)
     palt(14, true)
@@ -69,5 +69,5 @@ function scr_main_draw()
 end
 
 function draw_bg()
-    rectfill(0,0,128,60,12)
+    map(0,0,0,0,128,128)
 end
