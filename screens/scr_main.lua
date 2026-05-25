@@ -56,15 +56,18 @@ end
 
 function scr_main_draw()
     cls(5)
+    draw_bg()
     palt(0, false)
     palt(14, true)
     fillp(0xa5a5.1)
     ovalfill(character.x+2, character.y+14,character.x+12,character.y+16, 0x05)
     fillp()
     sspr(anim[flr(anim.f)].sprx,anim[flr(anim.f)].spry,16,16,character.x,character.y,16,16,character.flipped)  
-
+    --draw snekborg
+    sspr(0,16,16,16,72,72,16,16,false,false)
     pal()
 end
 
 function draw_bg()
+    rectfill(0,0,128,60,12)
 end
