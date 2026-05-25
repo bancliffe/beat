@@ -5,7 +5,8 @@ character={
     state="idle",
     anims={
         idle={f=2,s=0.1,{sprx=8,spry=0}},
-        attack={f=2,s=0.1,{sprx=24,spry=0}},
+        punch={f=2,s=0.1,{sprx=24,spry=0}},
+        kick={f=2,s=0.1,{sprx=72,spry=0}},
         walk={f=2,s=0.2,{sprx=40,spry=0},{sprx=56,spry=0}}
     }
 }

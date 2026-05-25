@@ -1,14 +1,26 @@
 function scr_main_init()
-    character.x=64
-    character.y=64
+    character.x=96
+    character.y=96
     character.state="idle"
     anim=character.anims[character.state]
+    played_punch=false
 end
 
 function scr_main_update()
     if btn(5) then
-        character.state="attack"
+        character.state="punch"
+        if not played_punch then
+            sfx(0)
+            played_punch=true
+        end
+    elseif btn(4) then
+        character.state="kick"
+        if not played_punch then
+            sfx(0)
+            played_punch=true
+        end
     else
+        played_punch=false
         if btn(0) then
             character.state="walk"
             character.x-=1
@@ -27,6 +39,9 @@ function scr_main_update()
             character.state="walk"
             character.y+=1  
         end
+        -- cap y to half the screen
+        if character.y<48 then character.y=48 end
+
         if not (btn(0) or btn(1) or btn(2) or btn(3)) then
             character.state="idle"
         end
@@ -40,9 +55,16 @@ function scr_main_update()
 end
 
 function scr_main_draw()
-    cls()
-    print(character.state,0,0)
-    print(anim[1].sprx..","..anim[1].spry,0,8)
-    print(anim.f,0,16)
+    cls(5)
+    palt(0, false)
+    palt(14, true)
+    fillp(0xa5a5.1)
+    ovalfill(character.x+2, character.y+14,character.x+12,character.y+16, 0x05)
+    fillp()
     sspr(anim[flr(anim.f)].sprx,anim[flr(anim.f)].spry,16,16,character.x,character.y,16,16,character.flipped)  
+
+    pal()
+end
+
+function draw_bg()
 end
