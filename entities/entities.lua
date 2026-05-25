@@ -25,7 +25,9 @@ player=entity:new({
         idle={f=2,s=0.1,{sprx=8,spry=0}},
         punch={f=2,s=0.1,{sprx=24,spry=0}},
         kick={f=2,s=0.1,{sprx=72,spry=0}},
-        walk={f=2,s=0.2,{sprx=40,spry=0},{sprx=56,spry=0}}
+        walk={f=2,s=0.2,{sprx=40,spry=0},{sprx=56,spry=0}},
+        hit={f=2,s=0.1,{sprx=88,spry=0}},
+        finisher={f=2,s=0.1,{sprx=104,spry=0}}
     },
     update=function(_ENV)
         if btn(5) then
@@ -84,6 +86,47 @@ player=entity:new({
         palt(14, true)
         fillp(0xa5a5.1)
         ovalfill(x+2, y+14,x+12, y+16, 0x05)
+        fillp()
+        sspr(anim[flr(anim.f)].sprx,anim[flr(anim.f)].spry,16,16,x,y,16,16,flipped)  
+        pal()
+    end
+})
+
+snekborg=entity:new({
+    x=0,
+    y=0,
+    flipped=false,
+    state="idle",
+    played_sound=false,
+    anims={
+        idle={f=2,s=0.1,{sprx=0,spry=16}},
+        walk={f=2,s=0.2,{sprx=0,spry=16},{sprx=16,spry=16},{sprx=32,spry=16}},
+        hit={f=2,s=0.1,{sprx=48,spry=16}},
+    },
+    update=function(_ENV)
+       anim=anims[state]
+        if anim.f < #anim+1-anim.s then
+            anim.f+=0.1
+        else 
+            anim.f=1
+        end
+
+        if global.player.x < x then
+            flipped=false
+        else
+            flipped=true
+        end
+    end,
+
+    draw=function(_ENV)
+        palt(0, false)
+        palt(14, true)
+        fillp(0xa5a5.1)
+        if flipped then
+            ovalfill(x+4, y+14,x+14, y+16, 0x05)
+        else
+            ovalfill(x+5, y+12,x+15, y+17, 0x05)
+        end
         fillp()
         sspr(anim[flr(anim.f)].sprx,anim[flr(anim.f)].spry,16,16,x,y,16,16,flipped)  
         pal()
