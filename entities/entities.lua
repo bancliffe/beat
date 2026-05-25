@@ -11,9 +11,21 @@ class=setmetatable({
 entity=class:new({
     x=0,
     y=0,
+    update_bb=function(_ENV)
+        bbw=8
+        bbh=4
+        bbx=x+8-(bbw/2)
+        bby=y+16-bbh
+    end,
     update=function() end,
     draw=function() end
 })
+
+-- axis-aligned bbox overlap check
+function aabb_overlap(a,b)
+    if not (a.bbx and b.bbx) then return false end
+    return not (a.bbx+a.bbw <= b.bbx or b.bbx+b.bbw <= a.bbx or a.bby+a.bbh <= b.bby or b.bby+b.bbh <= a.bby)
+end
 
 player=entity:new({
     x=0,
@@ -30,37 +42,122 @@ player=entity:new({
         finisher={f=2,s=0.1,{sprx=104,spry=0}}
     },
     update=function(_ENV)
+        -- keep bbox up to date
+        _ENV:update_bb()
+
         if btn(5) then
             state="punch"
             if not played_punch then
                 sfx(0)
                 played_punch=true
             end
+            -- while punching, check collisions and apply hit state/sfx to others
+            _ENV:update_bb()
+            -- attack bbox: 8px wide, 4px tall, starting from sprite center towards facing direction
+            local attack={}
+            attack.bbh=4
+            attack.bbw=8
+            attack.bby=y+16-attack.bbh
+            if flipped then
+                -- facing left: attack from center to left
+                attack.bbx=x+8-attack.bbw
+            else
+                -- facing right: attack from center to right
+                attack.bbx=x+8
+            end
+            for o in all(global.characters) do
+                if o ~= _ENV then
+                    o:update_bb()
+                    if aabb_overlap(attack,o) and o.state ~= "hit" then
+                        o.state = "hit"
+                        o.hit_timer = 8
+                        sfx(1)
+                    end
+                end
+            end
+
+            local collided=false
+            for o in all(global.characters) do
+                if o ~= _ENV then
+                    o:update_bb()
+                    if aabb_overlap(_ENV,o) then
+                        collided=true
+                        break
+                    end
+                end
+            end
+
         elseif btn(4) then
             state="kick"
             if not played_punch then
                 sfx(0)
                 played_punch=true
             end
+            -- kick uses same directional attack box as punch
+            _ENV:update_bb()
+            local attack_k={}
+            attack_k.bbh=4
+            attack_k.bbw=8
+            attack_k.bby=y+16-attack_k.bbh
+            if flipped then
+                attack_k.bbx=x+8-attack_k.bbw
+            else
+                attack_k.bbx=x+8
+            end
+            for o in all(global.characters) do
+                if o ~= _ENV then
+                    o:update_bb()
+                    if aabb_overlap(attack_k,o) and o.state ~= "hit" then
+                        o.state = "hit"
+                        o.hit_timer = 8
+                        sfx(1)
+                    end
+                end
+            end
         else
             played_punch=false
-            if btn(0) then
+            local moved=false
+            local dx=0
+            local dy=0
+            if btn(0) then dx=-1 flipped=true end
+            if btn(1) then dx=1 flipped=false end
+            if btn(2) then dy=-1 end
+            if btn(3) then dy=1 end
+
+            if dx~=0 then
                 state="walk"
-                x-=1
-                flipped=true
+                local oldx=x
+                x+=dx
+                _ENV:update_bb()
+                local collided=false
+                for o in all(global.characters) do
+                    if o ~= _ENV then
+                        o:update_bb()
+                        if aabb_overlap(_ENV,o) then
+                            collided=true
+                            break
+                        end
+                    end
+                end
+                if collided then x=oldx _ENV:update_bb() end
             end
-            if btn(1) then
+
+            if dy~=0 then
                 state="walk"
-                x+=1
-                flipped=false
-            end
-            if btn(2) then
-                state="walk"
-                y-=1
-            end
-            if btn(3) then
-                state="walk"
-                y+=1  
+                local oldy=y
+                y+=dy
+                _ENV:update_bb()
+                local collided=false
+                for o in all(global.characters) do
+                    if o ~= _ENV then
+                        o:update_bb()
+                        if aabb_overlap(_ENV,o) then
+                            collided=true
+                            break
+                        end
+                    end
+                end
+                if collided then y=oldy _ENV:update_bb() end
             end
             -- cap y to game area
             if y<48 then y=48 end
@@ -103,8 +200,20 @@ snekborg=entity:new({
         walk={f=2,s=0.2,{sprx=0,spry=16},{sprx=16,spry=16},{sprx=32,spry=16}},
         hit={f=2,s=0.1,{sprx=48,spry=16}},
     },
+
     update=function(_ENV)
-       anim=anims[state]
+        -- keep bbox current for collisions
+        _ENV:update_bb()
+        -- handle hit timer (frames)
+        if state=="hit" then
+            hit_timer = (hit_timer or 0) - 1
+            if hit_timer <= 0 then
+                state = "idle"
+                hit_timer = nil
+            end
+        end
+
+        anim=anims[state]
         if anim.f < #anim+1-anim.s then
             anim.f+=0.1
         else 
