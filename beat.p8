@@ -1,6 +1,7 @@
 pico-8 cartridge // http://www.pico-8.com
 version 43
 __lua__
+#include utils.lua
 #include entities/entities.lua
 #include screens/scr_main.lua
 

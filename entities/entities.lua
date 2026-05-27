@@ -11,6 +11,7 @@ class=setmetatable({
 entity=class:new({
     x=0,
     y=0,
+    health=3,
     update_bb=function(_ENV)
         bbw=8
         bbh=4
@@ -20,12 +21,6 @@ entity=class:new({
     update=function() end,
     draw=function() end
 })
-
--- axis-aligned bbox overlap check
-function aabb_overlap(a,b)
-    if not (a.bbx and b.bbx) then return false end
-    return not (a.bbx+a.bbw <= b.bbx or b.bbx+b.bbw <= a.bbx or a.bby+a.bbh <= b.bby or b.bby+b.bbh <= a.bby)
-end
 
 player=entity:new({
     x=0,
@@ -51,9 +46,7 @@ player=entity:new({
                 sfx(0)
                 played_punch=true
             end
-            -- while punching, check collisions and apply hit state/sfx to others
             _ENV:update_bb()
-            -- attack bbox: 8px wide, 4px tall, starting from sprite center towards facing direction
             local attack={}
             attack.bbh=4
             attack.bbw=8
@@ -71,6 +64,7 @@ player=entity:new({
                     if aabb_overlap(attack,o) and o.state ~= "hit" then
                         o.state = "hit"
                         o.hit_timer = 8
+                        o.health-=1
                         sfx(1)
                     end
                 end
@@ -110,6 +104,7 @@ player=entity:new({
                     if aabb_overlap(attack_k,o) and o.state ~= "hit" then
                         o.state = "hit"
                         o.hit_timer = 8
+                        o.health-=1
                         sfx(1)
                     end
                 end
@@ -224,6 +219,21 @@ snekborg=entity:new({
             flipped=false
         else
             flipped=true
+        end
+
+        if health <= 0 then
+            for x=1,16 do
+                for y=1,16 do
+                    local c = sget(x+anim[flr(anim.f)].sprx,y+anim[flr(anim.f)].spry)
+                    if c != 14 then
+                        if global.player.x < _ENV.x then
+                            spawn_particle(_ENV.x+x,_ENV.y+y,rnd(1),c,_ENV.y+16,global.particles)
+                        else
+                            spawn_particle(_ENV.x+x,_ENV.y+y,-rnd(1),c,_ENV.y+16,global.particles)
+                        end
+                    end
+                end
+            end
         end
     end,
 
